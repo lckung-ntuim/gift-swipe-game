@@ -260,7 +260,7 @@ function b64d(str){ return JSON.parse(decodeURIComponent(escape(atob(str.trim())
 
 /* ---------------- config ---------------- */
 // 貼上 Google Apps Script 部署後的「網頁應用程式網址」（https://script.google.com/macros/s/.../exec）
-const SHEET_ENDPOINT = "";
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzSh7di_QxHlROX6d5-LI2VBMt2tQuamD3FcPXr4flSDknO963L_GckjLxSOQRPLQVL/exec";
 if (location.hash === "#records") setTimeout(openRecords, 0);
 
 /* ---------------- catalog (built-in + Google 試算表「商品」分頁) ---------------- */
