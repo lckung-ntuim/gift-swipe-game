@@ -199,6 +199,12 @@ td a{color:var(--rose-d)}
     </div>
     <div id="importOut"></div>
   </div>
+  <div class="panel">
+    <h3>檢查商品圖片</h3>
+    <p class="save" style="text-align:left;margin-bottom:8px">逐一測試所有商品照片能不能載入，列出載不出來的（遊戲會自動略過它們）。</p>
+    <button class="btn2" id="checkBtn">開始檢查</button>
+    <div id="checkOut" class="save" style="text-align:left;margin-top:10px"></div>
+  </div>
 </section>
 
 <div class="toast" id="toast"></div>
@@ -210,7 +216,7 @@ td a{color:var(--rose-d)}
 const CATS = {
   "唇彩":["#fbe3e6","#eaa1b0"], "香水":["#efe9f7","#c3b2e6"], "香氛居家":["#f6eee3","#dcc3a1"],
   "保養":["#e6f3ec","#a6d4bd"], "飾品":["#fdf4dc","#e8cd86"], "包包":["#f1e9e3","#c9a897"],
-  "配件":["#e5ecf5","#a9bdd8"], "生活選物":["#fde8ef","#f1a9c4"]
+  "配件":["#e5ecf5","#a9bdd8"], "生活選物":["#fde8ef","#f1a9c4"], "彩妝":["#fbe6ef","#e9a6c2"]
 };
 const TIERS = ["平價","中價","輕奢","頂級"];          // <2k, 2k–10k, 10k–50k, >50k
 const STYLES = ["經典優雅","浪漫甜美","極簡知性","個性時髦","自然療癒"];
@@ -280,20 +286,44 @@ const SEEN_KEY = "gsg_seen_v1";
 function getSeen(){ try { return JSON.parse(localStorage.getItem(SEEN_KEY)) || {}; } catch(e){ return {}; } }
 function markSeen(list){ try { const s = getSeen(), t = Date.now(); list.forEach(i => s[i.id] = t); localStorage.setItem(SEEN_KEY, JSON.stringify(s)); } catch(e){} }
 // 先抽沒看過的；不夠再從最久以前看過的補
-function pickRound(){
+// 圖片檢查：載入成功才放進牌堆，確保每張卡都有照片
+const imgOK = {};
+function loadImg(url, ms=5000){
+  if (!url) return Promise.resolve(false);
+  if (url in imgOK) return Promise.resolve(imgOK[url]);
+  return new Promise(res => {
+    const im = new Image(); let done = false;
+    const fin = ok => { if (done) return; done = true; imgOK[url] = ok; res(ok); };
+    im.referrerPolicy = "no-referrer";
+    im.onload = () => fin(im.naturalWidth > 0); im.onerror = () => fin(false);
+    setTimeout(() => fin(false), ms);
+    im.src = url;
+  });
+}
+async function pickRound(){
   const seen = getSeen();
-  // 沒看過的商品裡，有照片的優先
-  const unseen = shuffle(ITEMS.filter(i => !seen[i.id])).sort((a,b) => (b.img?1:0) - (a.img?1:0));
-  const old = shuffle(ITEMS.filter(i => seen[i.id])).sort((a,b) => seen[a.id] - seen[b.id]);
-  return shuffle(unseen.concat(old).slice(0, ROUND));
+  const unseen = shuffle(ITEMS.filter(i => !seen[i.id] && i.img));
+  const old = shuffle(ITEMS.filter(i => seen[i.id] && i.img)).sort((a,b) => seen[a.id] - seen[b.id]);
+  const order = unseen.concat(old);
+  const good = [], t0 = Date.now();
+  for (let k = 0; k < order.length && good.length < ROUND && Date.now() - t0 < 12000; k += 10) {
+    const batch = order.slice(k, k + 10);
+    const oks = await Promise.all(batch.map(i => loadImg(i.img)));
+    batch.forEach((i, j) => { if (oks[j] && good.length < ROUND) good.push(i); });
+  }
+  if (good.length < ROUND) order.forEach(i => { if (good.length < ROUND && !good.includes(i)) good.push(i); });
+  return shuffle(good);
 }
 
 /* ---------------- game state ---------------- */
 let run = null, deckOrder = [], idx = 0, shownAt = 0, busy = false;
 
+// 一打開頁面就先在背景挑好這一輪、檢查圖片
+let roundReady = catalogReady.then(pickRound);
 $("startBtn").onclick = async () => {
   $("startBtn").disabled = true; $("startBtn").textContent = "準備中…";
-  await catalogReady;
+  deckOrder = await roundReady;
+  roundReady = null;
   $("startBtn").disabled = false; $("startBtn").textContent = "開始玩";
   const now = new Date();
   run = {
@@ -309,7 +339,6 @@ $("startBtn").onclick = async () => {
     recommendation: null,
     profile: null
   };
-  deckOrder = pickRound();
   markSeen(deckOrder);
   run.shownIds = deckOrder.map(i=>i.id);
   idx = 0;
@@ -317,7 +346,7 @@ $("startBtn").onclick = async () => {
   renderDeck();
   saveRun();
 };
-$("againBtn").onclick = () => { show("intro"); };
+$("againBtn").onclick = () => { roundReady = pickRound(); show("intro"); };
 $("backBtn").onclick = () => { history.replaceState(null,"",location.pathname); show("intro"); };
 window.addEventListener("hashchange", () => { if (location.hash==="#records") openRecords(); });
 
@@ -443,6 +472,7 @@ function analyze(choices){
                      .sort((a,b)=>b.s-a.s);
   const reco = ranked[0].p;
   return {
+    ranked: ranked.slice(0, 8).map(r => r.p),
     topStyle: best("style"), topTier: best("tier"), topCat: best("cat"),
     styleRates: STYLES.map(s => ({style:s, pct: rate.style[s] ? Math.round(rate.style[s].yes/rate.style[s].n*100) : 0})),
     likeCount: yes.length, superCount: choices.filter(c=>c.choice==="super").length,
@@ -459,12 +489,16 @@ const STYLE_COPY = {
   "自然療癒":"你重視生活裡的放鬆時刻，香氣和觸感能讓你心情變好。"
 };
 
-function finish(){
+async function finish(){
   const end = new Date();
   run.finishedAt = end.toISOString();
   run.totalSeconds = Math.round((end - new Date(run.startedAt))/1000);
   run.completed = true;
   const a = analyze(run.choices);
+  // 推薦也要有照片：從排名前幾名中挑第一個圖片載得出來的
+  $("recoCard").innerHTML = `<p class="empty">正在為你挑選…</p>`; show("result");
+  const oks = await Promise.all(a.ranked.map(p => loadImg(p.img, 4000)));
+  const pick = a.ranked.find((p, j) => oks[j]); if (pick) a.reco = pick;
   run.profile = { topStyle:a.topStyle, topTier:a.topTier, topCategory:a.topCat, likeCount:a.likeCount,
                   superCount:a.superCount, avgLikedPrice:a.avgYesPrice, avgSeconds:a.avgSec, styleRates:a.styleRates };
   run.recommendation = { itemId:a.reco.id, brand:a.reco.brand, name:a.reco.name, price:a.reco.price,
@@ -550,6 +584,16 @@ function openRecords(){
   show("records");
   $("runList").innerHTML = `<p class="empty">遊玩紀錄會自動寫進你的 Google 試算表。<br>如果對方傳來結果代碼，可以貼在下方查看。</p>`;
 }
+$("checkBtn").onclick = async () => {
+  const out = $("checkOut"); const list = ITEMS.slice(); let done = 0; const bad = [];
+  for (let k = 0; k < list.length; k += 12) {
+    const batch = list.slice(k, k + 12);
+    const oks = await Promise.all(batch.map(i => loadImg(i.img, 8000)));
+    batch.forEach((i, j) => { if (!oks[j]) bad.push(i); });
+    done += batch.length; out.textContent = `檢查中… ${done} / ${list.length}`;
+  }
+  out.innerHTML = `共 ${list.length} 件，載不出來 ${bad.length} 件` + (bad.length ? "：<br>" + bad.map(i => esc(i.id + "｜" + i.brand + "｜" + i.name)).join("<br>") : " 🎉");
+};
 $("importBtn").onclick = () => {
   try {
     const r = b64d($("importText").value);
