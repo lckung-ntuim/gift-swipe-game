@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>心動禮物大挑戰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf6f2; --ink:#2b2326; --muted:#8a7c80; --rose:#c75b7a; --rose-d:#a8445f;
+  --gold:#b8955a; --card:#fff; --line:#ece3dc; --nope:#8d8d99; --like:#d9567d; --super:#c99a2e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--ink);
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none}
+.serif{font-family:"Noto Serif TC",serif}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.screen{display:none;min-height:100dvh;max-width:480px;margin:0 auto;padding:20px 18px 28px;flex-direction:column}
+.screen.on{display:flex}
+
+/* intro */
+#intro{justify-content:center;text-align:center;gap:18px}
+.badge{display:inline-block;margin:0 auto;padding:6px 14px;border:1px solid var(--line);border-radius:99px;
+  font-size:13px;color:var(--gold);letter-spacing:.15em;background:#fff}
+h1{font-size:34px;line-height:1.25;letter-spacing:.04em}
+h1 em{font-style:normal;color:var(--rose)}
+.lead{color:var(--muted);line-height:1.8;font-size:15px}
+.howto{display:flex;justify-content:center;gap:10px;margin:6px 0}
+.howto div{flex:1;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 6px;font-size:13px;color:var(--muted)}
+.howto b{display:block;font-size:22px;margin-bottom:4px}
+.field{display:flex;flex-direction:column;gap:6px;text-align:left}
+.field label{font-size:13px;color:var(--muted)}
+.field input{font:inherit;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:16px}
+.field input:focus{outline:2px solid #e9b8c6;border-color:transparent}
+.cta{background:var(--rose);color:#fff;font-size:17px;font-weight:700;letter-spacing:.1em;padding:16px;border-radius:16px;
+  box-shadow:0 8px 20px -8px rgba(199,91,122,.6);transition:transform .15s}
+.cta:active{transform:scale(.98)}
+.ghost{color:var(--muted);font-size:13px;text-decoration:underline;text-underline-offset:3px;padding:8px}
+
+/* game */
+#game{padding-top:14px;gap:12px}
+.topbar{display:flex;align-items:center;gap:12px}
+.progress{flex:1;height:6px;background:var(--line);border-radius:9px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e9a3b8,var(--rose));transition:width .3s}
+.count{font-size:13px;color:var(--muted);min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.deck{position:relative;flex:1;min-height:440px;margin-top:4px}
+.card{position:absolute;inset:0;border-radius:26px;background:var(--card);overflow:hidden;
+  box-shadow:0 18px 40px -18px rgba(80,40,55,.35),0 2px 6px rgba(80,40,55,.06);
+  display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform}
+.card.back{transform:scale(.95) translateY(14px);filter:brightness(.98)}
+.card.anim{transition:transform .35s ease,opacity .35s ease}
+.hero{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:200px}
+.hero .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;padding:12px;pointer-events:none}
+.hero .cat,.hero .tier,.hero .label,.stamp{z-index:2}
+.hero .emo{font-size:104px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.12))}
+.hero .cat{position:absolute;left:16px;top:16px;background:rgba(246,236,239,.92);backdrop-filter:blur(6px);
+  padding:5px 12px;border-radius:99px;font-size:12px;letter-spacing:.08em}
+.hero .tier{position:absolute;right:16px;top:16px;background:rgba(43,35,38,.78);color:#fff;
+  padding:5px 12px;border-radius:99px;font-size:12px;letter-spacing:.05em}
+.info{padding:18px 20px 20px}
+.brand{font-size:12px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;font-weight:700}
+.pname{font-size:22px;margin:4px 0 6px;line-height:1.35}
+.price{font-size:17px;font-weight:700;color:var(--rose-d)}
+.price small{font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
+.desc{color:var(--muted);font-size:14px;line-height:1.7;margin-top:8px}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}
+.chip{font-size:12px;padding:4px 10px;border-radius:99px;background:#f6eef0;color:var(--rose-d)}
+.link{font-size:13px;color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px}
+.stamp{position:absolute;top:34px;padding:6px 14px;border:4px solid;border-radius:12px;font-size:28px;font-weight:700;
+  letter-spacing:.1em;opacity:0;pointer-events:none;background:rgba(255,255,255,.6)}
+.stamp.like{left:22px;color:var(--like);border-color:var(--like);transform:rotate(-14deg)}
+.stamp.nope{right:22px;color:var(--nope);border-color:var(--nope);transform:rotate(14deg)}
+.stamp.super{left:50%;top:auto;bottom:40%;transform:translateX(-50%) rotate(-6deg);color:var(--super);border-color:var(--super)}
+.actions{display:flex;justify-content:center;align-items:center;gap:22px;padding-top:4px}
+.act{width:64px;height:64px;border-radius:50%;background:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 18px -8px rgba(80,40,55,.35);transition:transform .12s}
+.act:active{transform:scale(.9)}
+.act.nope{color:var(--nope)} .act.like{color:var(--like)}
+.act.super{width:52px;height:52px;font-size:22px;color:var(--super)}
+.hint{text-align:center;font-size:12px;color:var(--muted)}
+
+/* result */
+#result{gap:16px}
+.rhead{text-align:center;padding-top:10px}
+.rhead h2{font-size:26px;margin:8px 0 4px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px}
+.panel h3{font-size:15px;margin-bottom:12px;letter-spacing:.06em}
+.bar{display:grid;grid-template-columns:72px 1fr 40px;gap:10px;align-items:center;font-size:13px;margin:8px 0}
+.bar .t{height:8px;border-radius:9px;background:#f3ecee;overflow:hidden}
+.bar .t i{display:block;height:100%;background:linear-gradient(90deg,#efb4c5,var(--rose));border-radius:9px}
+.bar .v{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+.facts div{background:#faf4f5;border-radius:14px;padding:10px 4px}
+.facts b{display:block;font-size:16px;margin-top:2px;color:var(--rose-d)}
+.facts span{font-size:11px;color:var(--muted)}
+.reco{border-radius:24px;overflow:hidden;background:#fff;box-shadow:0 18px 40px -18px rgba(80,40,55,.35)}
+.reco .hero{min-height:170px}
+.reco .label{position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);background:var(--ink);color:#fff;
+  font-size:12px;padding:6px 14px;border-radius:99px;letter-spacing:.15em;white-space:nowrap}
+.reco .info{padding-top:24px}
+.why{background:#fbf6ef;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.75;color:#5c4f53;margin-top:12px}
+.loves{display:flex;flex-wrap:wrap;gap:6px}
+.save{font-size:13px;color:var(--muted);text-align:center;line-height:1.7}
+.save.ok{color:#3c8a65}
+.codebox{display:none;flex-direction:column;gap:8px}
+.codebox.on{display:flex}
+.codebox textarea{font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:12px;padding:10px;height:84px;resize:none;background:#fff;color:var(--muted)}
+.btn2{background:#fff;border:1px solid var(--line);padding:12px;border-radius:14px;font-size:14px;font-weight:500}
+
+/* records */
+#records{gap:14px}
+#records h2{font-size:22px}
+.run{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.run summary{list-style:none;cursor:pointer}
+.run summary::-webkit-details-marker{display:none}
+.run .meta{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6}
+.run .who{font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
+th,td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:500}
+td.n,td[class^="c-"]{white-space:nowrap}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td a{color:var(--rose-d)}
+.c-like{color:var(--like);font-weight:700}.c-super{color:var(--super);font-weight:700}.c-nope{color:var(--nope)}
+.empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:14px;line-height:1.7}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;
+  padding:10px 16px;border-radius:99px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<section id="intro" class="screen on">
+  <div class="badge">GIFT · SWIPE · LOVE</div>
+  <h1 class="serif">心動禮物<br><em>大挑戰</em></h1>
+  <p class="lead">接下來會出現 20 件禮物，<br>憑第一直覺選擇就好，不用想太久 ✨<br>最後會為你挑出一件專屬推薦。</p>
+  <div class="howto">
+    <div><b>👈</b>左滑<br>沒感覺</div>
+    <div><b>⭐</b>上滑<br>超想要</div>
+    <div><b>👉</b>右滑<br>喜歡</div>
+  </div>
+  <div class="field">
+    <label for="nick">你的暱稱（選填）</label>
+    <input id="nick" maxlength="20" placeholder="例如：小美" autocomplete="off">
+  </div>
+  <button class="cta" id="startBtn">開始玩</button>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <div class="topbar">
+    <div class="progress"><i id="prog"></i></div>
+    <div class="count" id="count">1 / 20</div>
+  </div>
+  <div class="deck" id="deck"></div>
+  <div class="actions">
+    <button class="act nope" id="bNope" aria-label="沒感覺">✕</button>
+    <button class="act super" id="bSuper" aria-label="超想要">★</button>
+    <button class="act like" id="bLike" aria-label="喜歡">♥</button>
+  </div>
+  <div class="hint">也可以直接拖曳卡片</div>
+</section>
+
+<!-- RESULT -->
+<section id="result" class="screen">
+  <div class="rhead">
+    <div class="badge">YOUR GIFT PROFILE</div>
+    <h2 class="serif" id="rTitle">你的心動風格</h2>
+    <p class="lead" id="rSub"></p>
+  </div>
+
+  <div class="reco" id="recoCard"></div>
+
+  <div class="panel">
+    <h3>風格心動指數</h3>
+    <div id="styleBars"></div>
+  </div>
+  <div class="panel">
+    <div class="facts" id="facts"></div>
+  </div>
+  <div class="panel" id="lovesPanel">
+    <h3>⭐ 你超想要的</h3>
+    <div class="loves" id="loves"></div>
+  </div>
+
+  <p class="save" id="saveStatus">正在儲存結果…</p>
+  <div class="codebox" id="codeBox">
+    <p class="save">如果結果沒有自動儲存，請按下方按鈕複製「結果代碼」，再貼給傳連結給你的人 💌</p>
+    <textarea id="codeText" readonly></textarea>
+    <button class="btn2" id="copyBtn">複製結果代碼</button>
+  </div>
+  <button class="ghost" id="againBtn">再玩一次</button>
+</section>
+
+<!-- RECORDS (owner) -->
+<section id="records" class="screen">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h2 class="serif">查看結果代碼</h2>
+    <button class="ghost" id="backBtn">← 回遊戲</button>
+  </div>
+  <div id="runList"><p class="empty">讀取中…</p></div>
+  <div class="panel">
+    <h3>匯入結果代碼</h3>
+    <p class="save" style="text-align:left;margin-bottom:8px">對方若無法自動儲存，會給你一段代碼，貼在這裡即可查看。</p>
+    <div class="codebox on">
+      <textarea id="importText" placeholder="貼上結果代碼"></textarea>
+      <button class="btn2" id="importBtn">查看這筆結果</button>
+    </div>
+    <div id="importOut"></div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script src="catalog.js"></script>
+<script>
+/* ---------------- data ---------------- */
+const CATS = {
+  "唇彩":["#fbe3e6","#eaa1b0"], "香水":["#efe9f7","#c3b2e6"], "香氛居家":["#f6eee3","#dcc3a1"],
+  "保養":["#e6f3ec","#a6d4bd"], "飾品":["#fdf4dc","#e8cd86"], "包包":["#f1e9e3","#c9a897"],
+  "配件":["#e5ecf5","#a9bdd8"], "生活選物":["#fde8ef","#f1a9c4"]
+};
+const TIERS = ["平價","中價","輕奢","頂級"];          // <2k, 2k–10k, 10k–50k, >50k
+const STYLES = ["經典優雅","浪漫甜美","極簡知性","個性時髦","自然療癒"];
+const tierOf = p => p < 2000 ? "平價" : p < 10000 ? "中價" : p < 50000 ? "輕奢" : "頂級";
+
+const ROUND = 20;   // 每輪幾件
+const toObj = o => {
+  const price = Math.max(0, Math.round(+o.price || 0));
+  return { id:String(o.id), brand:String(o.brand||""), name:String(o.name||""),
+    cat: CATS[o.cat] ? o.cat : "生活選物", price, tier: tierOf(price),
+    style: STYLES.includes(o.style) ? o.style : "經典優雅",
+    emoji: o.emoji || "🎁", desc: String(o.desc||""),
+    img: /^https:\/\//.test(o.img||"") ? o.img : "",
+    url: /^https:\/\//.test(o.link||"") ? o.link : "https://www.google.com/search?q="+encodeURIComponent((o.brand||"")+" "+(o.name||"")) };
+};
+let ITEMS = (window.CATALOG || []).map(toObj);
+const fmt = n => "NT$" + n.toLocaleString("en-US");
+
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on", s.id===id)); window.scrollTo(0,0); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),1800); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+const pad = n => String(n).padStart(2,"0");
+function fmtTime(iso){ const d=new Date(iso); return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function heroHTML(it, extra=""){
+  const [a,b] = CATS[it.cat] || ["#eee","#ccc"];
+  return `<div class="hero" style="background:linear-gradient(150deg,${a},${b})">
+    <span class="cat">${esc(it.cat)}</span><span class="tier">${esc(it.tier)}</span>
+    <span class="emo">${it.emoji}</span>
+    ${it.img ? `<img class="photo" src="${esc(it.img)}" alt="" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()">` : ""}${extra}</div>`;
+}
+function b64e(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+function b64d(str){ return JSON.parse(decodeURIComponent(escape(atob(str.trim())))); }
+
+/* ---------------- config ---------------- */
+// 貼上 Google Apps Script 部署後的「網頁應用程式網址」（https://script.google.com/macros/s/.../exec）
+const SHEET_ENDPOINT = "";
+if (location.hash === "#records") setTimeout(openRecords, 0);
+
+/* ---------------- catalog (built-in + Google 試算表「商品」分頁) ---------------- */
+const catalogReady = (async () => {
+  if (!SHEET_ENDPOINT) return;
+  try {
+    const ctl = new AbortController(); const t = setTimeout(()=>ctl.abort(), 6000);
+    const res = await fetch(SHEET_ENDPOINT + "?action=products", {signal: ctl.signal});
+    clearTimeout(t);
+    const rows = await res.json();
+    if (!Array.isArray(rows) || !rows.length) return;
+    const byId = new Map((window.CATALOG||[]).map(o => [String(o.id), {...o}]));
+    for (const r of rows) {
+      if (!r || !r.id) continue;
+      const id = String(r.id);
+      if (r.active === false) { byId.delete(id); continue; }
+      const base = byId.get(id) || {id};
+      for (const k of ["brand","name","cat","price","style","emoji","desc","link","img"])
+        if (r[k] !== undefined && r[k] !== "") base[k] = r[k];
+      if (base.brand && base.name) byId.set(id, base);
+    }
+    const list = [...byId.values()].map(toObj);
+    if (list.length >= ROUND) ITEMS = list;
+  } catch (e) { /* keep built-in catalog */ }
+})();
+
+const SEEN_KEY = "gsg_seen_v1";
+function getSeen(){ try { return JSON.parse(localStorage.getItem(SEEN_KEY)) || {}; } catch(e){ return {}; } }
+function markSeen(list){ try { const s = getSeen(), t = Date.now(); list.forEach(i => s[i.id] = t); localStorage.setItem(SEEN_KEY, JSON.stringify(s)); } catch(e){} }
+// 先抽沒看過的；不夠再從最久以前看過的補
+function pickRound(){
+  const seen = getSeen();
+  // 沒看過的商品裡，有照片的優先
+  const unseen = shuffle(ITEMS.filter(i => !seen[i.id])).sort((a,b) => (b.img?1:0) - (a.img?1:0));
+  const old = shuffle(ITEMS.filter(i => seen[i.id])).sort((a,b) => seen[a.id] - seen[b.id]);
+  return shuffle(unseen.concat(old).slice(0, ROUND));
+}
+
+/* ---------------- game state ---------------- */
+let run = null, deckOrder = [], idx = 0, shownAt = 0, busy = false;
+
+$("startBtn").onclick = async () => {
+  $("startBtn").disabled = true; $("startBtn").textContent = "準備中…";
+  await catalogReady;
+  $("startBtn").disabled = false; $("startBtn").textContent = "開始玩";
+  const now = new Date();
+  run = {
+    runId: "run_" + now.getTime().toString(36) + Math.random().toString(36).slice(2,6),
+    nickname: $("nick").value.trim().slice(0,20),
+    startedAt: now.toISOString(),
+    finishedAt: null,
+    totalSeconds: null,
+    device: navigator.userAgent.slice(0,160),
+    completed: false,
+    choices: [],
+    shownIds: [],
+    recommendation: null,
+    profile: null
+  };
+  deckOrder = pickRound();
+  markSeen(deckOrder);
+  run.shownIds = deckOrder.map(i=>i.id);
+  idx = 0;
+  show("game");
+  renderDeck();
+  saveRun();
+};
+$("againBtn").onclick = () => { show("intro"); };
+$("backBtn").onclick = () => { history.replaceState(null,"",location.pathname); show("intro"); };
+window.addEventListener("hashchange", () => { if (location.hash==="#records") openRecords(); });
+
+function cardHTML(it){
+  return `${heroHTML(it, `<div class="stamp like">喜歡</div><div class="stamp nope">NOPE</div><div class="stamp super">超想要</div>`)}
+  <div class="info">
+    <div class="brand">${esc(it.brand)}</div>
+    <div class="pname serif">${esc(it.name)}</div>
+    <div class="price">${fmt(it.price)}<small>參考價</small></div>
+    <div class="desc">${esc(it.desc)}</div>
+    <div class="row"><span class="chip"># ${esc(it.style)}</span>
+      <a class="link" href="${esc(it.url)}" target="_blank" rel="noopener">查看商品 ↗</a></div>
+  </div>`;
+}
+
+function renderDeck(){
+  const deck = $("deck"); deck.innerHTML = "";
+  $("count").textContent = `${Math.min(idx+1,ROUND)} / ${ROUND}`;
+  $("prog").style.width = (idx/ROUND*100) + "%";
+  if (idx >= deckOrder.length) { finish(); return; }
+  if (idx+1 < deckOrder.length) {
+    const back = document.createElement("div");
+    back.className = "card back"; back.innerHTML = cardHTML(deckOrder[idx+1]);
+    deck.appendChild(back);
+  }
+  const top = document.createElement("div");
+  top.className = "card"; top.innerHTML = cardHTML(deckOrder[idx]);
+  deck.appendChild(top);
+  attachDrag(top);
+  shownAt = performance.now();
+  busy = false;
+}
+
+function attachDrag(card){
+  let sx=0, sy=0, dx=0, dy=0, drag=false;
+  const stamps = { like:card.querySelector(".stamp.like"), nope:card.querySelector(".stamp.nope"), sup:card.querySelector(".stamp.super") };
+  card.querySelector(".link").addEventListener("pointerdown", e => e.stopPropagation());
+  card.addEventListener("pointerdown", e => {
+    if (busy) return; drag = true; sx=e.clientX; sy=e.clientY; dx=dy=0;
+    card.setPointerCapture(e.pointerId); card.classList.remove("anim");
+  });
+  card.addEventListener("pointermove", e => {
+    if (!drag) return; dx=e.clientX-sx; dy=e.clientY-sy;
+    card.style.transform = `translate(${dx}px,${dy}px) rotate(${dx/18}deg)`;
+    stamps.like.style.opacity = Math.max(0, Math.min(1, dx/100));
+    stamps.nope.style.opacity = Math.max(0, Math.min(1, -dx/100));
+    stamps.sup.style.opacity = Math.abs(dx) < 60 ? Math.max(0, Math.min(1, -dy/110)) : 0;
+  });
+  const end = () => {
+    if (!drag) return; drag = false;
+    if (dx > 100) decide("like","swipe");
+    else if (dx < -100) decide("nope","swipe");
+    else if (dy < -120 && Math.abs(dx) < 80) decide("super","swipe");
+    else { card.classList.add("anim"); card.style.transform=""; Object.values(stamps).forEach(s=>s.style.opacity=0); }
+  };
+  card.addEventListener("pointerup", end);
+  card.addEventListener("pointercancel", end);
+}
+
+function decide(choice, method){
+  if (busy || !run || idx >= deckOrder.length) return;
+  busy = true;
+  const secs = Math.round((performance.now() - shownAt) / 100) / 10;
+  const it = deckOrder[idx];
+  run.choices.push({
+    order: idx+1, itemId: it.id, brand: it.brand, name: it.name, url: it.url,
+    category: it.cat, price: it.price, tier: it.tier, style: it.style,
+    choice, seconds: secs, method, decidedAt: new Date().toISOString()
+  });
+  const card = $("deck").lastElementChild;
+  const st = card.querySelector(choice==="like"?".stamp.like":choice==="nope"?".stamp.nope":".stamp.super");
+  if (st) st.style.opacity = 1;
+  card.classList.add("anim");
+  const w = window.innerWidth;
+  card.style.transform = choice==="like" ? `translate(${w}px,40px) rotate(24deg)`
+                       : choice==="nope" ? `translate(${-w}px,40px) rotate(-24deg)`
+                       : `translate(0,${-window.innerHeight}px) rotate(-4deg)`;
+  card.style.opacity = 0;
+  idx++;
+  if (idx % 5 === 0 && idx < ROUND) saveRun();   // checkpoint in case she stops midway
+  setTimeout(renderDeck, 260);
+}
+$("bLike").onclick = () => decide("like","button");
+$("bNope").onclick = () => decide("nope","button");
+$("bSuper").onclick = () => decide("super","button");
+document.addEventListener("keydown", e => {
+  if (!$("game").classList.contains("on")) return;
+  if (e.key==="ArrowRight") decide("like","key");
+  else if (e.key==="ArrowLeft") decide("nope","key");
+  else if (e.key==="ArrowUp") decide("super","key");
+});
+
+/* ---------------- analysis ---------------- */
+function analyze(choices){
+  const sig = c => {
+    let s = c.choice==="super" ? 2 : c.choice==="like" ? 1 : -1;
+    if (c.seconds < 2.5) s *= 1.2;          // quick, decisive reactions count a bit more
+    return s;
+  };
+  const agg = {style:{}, tier:{}, cat:{}};
+  const rate = {style:{}, tier:{}, cat:{}};
+  for (const c of choices) {
+    const pairs = [["style",c.style],["tier",c.tier],["cat",c.category]];
+    for (const [d,v] of pairs) {
+      (agg[d][v] ||= {sum:0,n:0}); agg[d][v].sum += sig(c); agg[d][v].n++;
+      (rate[d][v] ||= {yes:0,n:0}); rate[d][v].n++; if (c.choice!=="nope") rate[d][v].yes++;
+    }
+  }
+  const score = (d,v) => agg[d][v] ? agg[d][v].sum / Math.sqrt(agg[d][v].n) : 0;
+  const best = d => Object.keys(agg[d]).sort((a,b)=>score(d,b)-score(d,a))[0];
+  const yes = choices.filter(c=>c.choice!=="nope");
+  const avgYesPrice = yes.length ? Math.round(yes.reduce((s,c)=>s+c.price,0)/yes.length) : 0;
+  const avgSec = choices.length ? Math.round(choices.reduce((s,c)=>s+c.seconds,0)/choices.length*10)/10 : 0;
+
+  // recommendation: best scoring item in the hidden pool
+  const shown = new Set(choices.map(c=>c.itemId));
+  const seen = getSeen();
+  let cands = ITEMS.filter(p => !shown.has(p.id));
+  const fresh = cands.filter(p => !seen[p.id]);
+  if (fresh.length >= 3) cands = fresh;
+  if (!cands.length) cands = ITEMS;
+  const ranked = cands.map(p => ({p, s: 1.5*score("style",p.style) + 1.2*score("tier",p.tier) + 1.0*score("cat",p.cat)}))
+                     .sort((a,b)=>b.s-a.s);
+  const reco = ranked[0].p;
+  return {
+    topStyle: best("style"), topTier: best("tier"), topCat: best("cat"),
+    styleRates: STYLES.map(s => ({style:s, pct: rate.style[s] ? Math.round(rate.style[s].yes/rate.style[s].n*100) : 0})),
+    likeCount: yes.length, superCount: choices.filter(c=>c.choice==="super").length,
+    avgYesPrice, avgSec, reco,
+    recoScore: Math.round(ranked[0].s*100)/100
+  };
+}
+
+const STYLE_COPY = {
+  "經典優雅":"你欣賞經得起時間考驗的東西，質感與品味比流行更重要。",
+  "浪漫甜美":"你喜歡帶點溫度和故事的小美好，收到禮物的心意對你很重要。",
+  "極簡知性":"你偏愛乾淨俐落、低調但耐看的設計，少即是多。",
+  "個性時髦":"你有自己的主張，喜歡有辨識度、帶點態度的單品。",
+  "自然療癒":"你重視生活裡的放鬆時刻，香氣和觸感能讓你心情變好。"
+};
+
+function finish(){
+  const end = new Date();
+  run.finishedAt = end.toISOString();
+  run.totalSeconds = Math.round((end - new Date(run.startedAt))/1000);
+  run.completed = true;
+  const a = analyze(run.choices);
+  run.profile = { topStyle:a.topStyle, topTier:a.topTier, topCategory:a.topCat, likeCount:a.likeCount,
+                  superCount:a.superCount, avgLikedPrice:a.avgYesPrice, avgSeconds:a.avgSec, styleRates:a.styleRates };
+  run.recommendation = { itemId:a.reco.id, brand:a.reco.brand, name:a.reco.name, price:a.reco.price,
+                         category:a.reco.cat, style:a.reco.style, url:a.reco.url, score:a.recoScore };
+  renderResult(run, a);
+  show("result");
+  saveRun(true);
+}
+
+function renderResult(r, a){
+  const name = r.nickname ? r.nickname + "，" : "";
+  $("rTitle").textContent = `你是「${a.topStyle}」派`;
+  $("rSub").textContent = name + STYLE_COPY[a.topStyle];
+  const p = a.reco;
+  $("recoCard").innerHTML = `${heroHTML(p, `<span class="label">為你推薦 ✦ 專屬心動</span>`)}
+    <div class="info">
+      <div class="brand">${esc(p.brand)}</div>
+      <div class="pname serif">${esc(p.name)}</div>
+      <div class="price">${fmt(p.price)}<small>參考價</small></div>
+      <div class="desc">${esc(p.desc)}</div>
+      <div class="why">因為你對「${esc(a.topStyle)}」風格最有感，偏好「${esc(a.topTier)}」價位，又特別喜歡「${esc(a.topCat)}」類的禮物，這件剛剛沒出現過的單品，應該會很對你的胃口。</div>
+      <div class="row"><span class="chip"># ${esc(p.style)}</span>
+        <a class="link" href="${esc(p.url)}" target="_blank" rel="noopener">查看商品 ↗</a></div>
+    </div>`;
+  $("styleBars").innerHTML = a.styleRates.map(s =>
+    `<div class="bar"><span>${esc(s.style)}</span><div class="t"><i style="width:${s.pct}%"></i></div><span class="v">${s.pct}%</span></div>`).join("");
+  $("facts").innerHTML = `<div><span>心動件數</span><b>${a.likeCount}/${r.choices.length}</b></div>
+    <div><span>心動均價</span><b>${a.avgYesPrice ? "$"+(a.avgYesPrice>=10000? (a.avgYesPrice/10000).toFixed(1)+"萬" : a.avgYesPrice.toLocaleString()) : "—"}</b></div>
+    <div><span>平均思考</span><b>${a.avgSec} 秒</b></div>`;
+  const loves = r.choices.filter(c=>c.choice==="super");
+  $("lovesPanel").style.display = loves.length ? "" : "none";
+  $("loves").innerHTML = loves.map(c=>`<span class="chip">${esc(c.brand)}｜${esc(c.name)}</span>`).join("");
+  $("codeText").value = b64e(r);
+  $("codeBox").classList.remove("on");
+}
+
+/* ---------------- saving (Google Sheets) ---------------- */
+let saving = false, saveAgain = false;
+async function saveRun(final){
+  if (!run) return;
+  if (!SHEET_ENDPOINT) { if (final) saveFailed(); return; }
+  if (saving) { saveAgain = true; return; }
+  saving = true;
+  try {
+    // text/plain + no-cors avoids a CORS preflight; Apps Script still receives the body
+    await fetch(SHEET_ENDPOINT, { method:"POST", mode:"no-cors",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(run) });
+    if (final) { $("saveStatus").textContent = "✓ 結果已自動儲存"; $("saveStatus").classList.add("ok"); $("codeBox").classList.add("on"); $("codeBox").querySelector("p").textContent = "（備份用）也可以複製結果代碼傳給他 💌"; }
+  } catch (e) {
+    if (final || run.completed) saveFailed();
+  } finally {
+    saving = false;
+    if (saveAgain) { saveAgain = false; saveRun(run.completed); }
+  }
+}
+// if she leaves midway, push what we have
+window.addEventListener("pagehide", () => {
+  if (run && !run.completed && run.choices.length && SHEET_ENDPOINT && navigator.sendBeacon)
+    navigator.sendBeacon(SHEET_ENDPOINT, new Blob([JSON.stringify(run)], {type:"text/plain"}));
+});
+function saveFailed(){
+  $("saveStatus").textContent = "結果沒辦法自動儲存（可能沒有登入）";
+  $("saveStatus").classList.remove("ok");
+  $("codeBox").classList.add("on");
+}
+$("copyBtn").onclick = async () => {
+  const t = $("codeText");
+  try { await navigator.clipboard.writeText(t.value); toast("已複製，貼給他吧 💌"); }
+  catch(e){ t.focus(); t.select(); toast("請長按選取後複製"); }
+};
+
+/* ---------------- records (owner) ---------------- */
+function runHTML(r, who){
+  const lk = r.choices.filter(c=>c.choice!=="nope").length;
+  const sp = r.choices.filter(c=>c.choice==="super").length;
+  const lab = {like:"喜歡",super:"超想要",nope:"不要"};
+  const rows = r.choices.map(c => `<tr>
+    <td class="n">${c.order}</td>
+    <td>${c.url && /^https:\/\//.test(c.url) ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.brand)}<br>${esc(c.name)}</a>` : esc(c.brand+" "+c.name)}</td>
+    <td class="n">${fmt(+c.price||0)}</td>
+    <td class="c-${esc(c.choice)}">${lab[c.choice]||esc(c.choice)}</td>
+    <td class="n">${esc(c.seconds)}s</td></tr>`).join("");
+  const rec = r.recommendation ? `<div class="why" style="margin-top:10px">🎁 推薦：${esc(r.recommendation.brand)}｜${esc(r.recommendation.name)}（${fmt(+r.recommendation.price||0)}）<br>
+    風格 ${esc(r.profile?.topStyle||"")}・價位 ${esc(r.profile?.topTier||"")}・品類 ${esc(r.profile?.topCategory||"")}・心動均價 ${fmt(+r.profile?.avgLikedPrice||0)}</div>` : "";
+  return `<details class="run"><summary>
+      <div class="who">${esc(r.nickname || who || "未署名")}　${r.completed ? "" : "<span class='chip'>未完成</span>"}</div>
+      <div class="meta">開始：${esc(fmtTime(r.startedAt))}${r.totalSeconds!=null ? `　共 ${esc(r.totalSeconds)} 秒` : ""}<br>
+      作答 ${r.choices.length}・喜歡 ${lk}・超想要 ${sp}</div></summary>
+      ${rec}
+      <table><thead><tr><th>#</th><th>商品</th><th>價格</th><th>選擇</th><th>秒數</th></tr></thead><tbody>${rows}</tbody></table>
+    </details>`;
+}
+function openRecords(){
+  show("records");
+  $("runList").innerHTML = `<p class="empty">遊玩紀錄會自動寫進你的 Google 試算表。<br>如果對方傳來結果代碼，可以貼在下方查看。</p>`;
+}
+$("importBtn").onclick = () => {
+  try {
+    const r = b64d($("importText").value);
+    if (!r || !Array.isArray(r.choices)) throw 0;
+    $("importOut").innerHTML = runHTML(r, "（代碼匯入）");
+    const d = $("importOut").querySelector("details"); if (d) d.open = true;
+  } catch(e) { $("importOut").innerHTML = `<p class="empty">代碼看起來不完整，請確認有整段複製。</p>`; }
+};
+</script>
+</body>
+</html>
