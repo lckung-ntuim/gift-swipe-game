@@ -167,24 +167,12 @@ td a{color:var(--rose-d)}
 <!-- RESULT -->
 <section id="result" class="screen">
   <div class="rhead">
-    <div class="badge">YOUR GIFT PROFILE</div>
-    <h2 class="serif" id="rTitle">你的心動風格</h2>
-    <p class="lead" id="rSub"></p>
+    <div class="badge">FOR YOU</div>
+    <h2 class="serif" id="rTitle">為你挑了一份禮物</h2>
+    <p class="lead" id="rSub">根據你剛剛的選擇，這件應該會很對你的胃口 ✨</p>
   </div>
 
   <div class="reco" id="recoCard"></div>
-
-  <div class="panel">
-    <h3>風格心動指數</h3>
-    <div id="styleBars"></div>
-  </div>
-  <div class="panel">
-    <div class="facts" id="facts"></div>
-  </div>
-  <div class="panel" id="lovesPanel">
-    <h3>⭐ 你超想要的</h3>
-    <div class="loves" id="loves"></div>
-  </div>
 
   <p class="save" id="saveStatus">正在儲存結果…</p>
   <div class="codebox" id="codeBox">
@@ -215,6 +203,7 @@ td a{color:var(--rose-d)}
 
 <div class="toast" id="toast"></div>
 
+<script src="config.js"></script>
 <script src="catalog.js"></script>
 <script>
 /* ---------------- data ---------------- */
@@ -260,7 +249,7 @@ function b64d(str){ return JSON.parse(decodeURIComponent(escape(atob(str.trim())
 
 /* ---------------- config ---------------- */
 // 貼上 Google Apps Script 部署後的「網頁應用程式網址」（https://script.google.com/macros/s/.../exec）
-const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzSh7di_QxHlROX6d5-LI2VBMt2tQuamD3FcPXr4flSDknO963L_GckjLxSOQRPLQVL/exec";
+const SHEET_ENDPOINT = (window.GAME_CONFIG && window.GAME_CONFIG.SHEET_ENDPOINT) || "";
 if (location.hash === "#records") setTimeout(openRecords, 0);
 
 /* ---------------- catalog (built-in + Google 試算表「商品」分頁) ---------------- */
@@ -486,9 +475,7 @@ function finish(){
 }
 
 function renderResult(r, a){
-  const name = r.nickname ? r.nickname + "，" : "";
-  $("rTitle").textContent = `你是「${a.topStyle}」派`;
-  $("rSub").textContent = name + STYLE_COPY[a.topStyle];
+  if (r.nickname) $("rTitle").textContent = `${r.nickname}，為你挑了一份禮物`;
   const p = a.reco;
   $("recoCard").innerHTML = `${heroHTML(p, `<span class="label">為你推薦 ✦ 專屬心動</span>`)}
     <div class="info">
@@ -496,18 +483,9 @@ function renderResult(r, a){
       <div class="pname serif">${esc(p.name)}</div>
       <div class="price">${fmt(p.price)}<small>參考價</small></div>
       <div class="desc">${esc(p.desc)}</div>
-      <div class="why">因為你對「${esc(a.topStyle)}」風格最有感，偏好「${esc(a.topTier)}」價位，又特別喜歡「${esc(a.topCat)}」類的禮物，這件剛剛沒出現過的單品，應該會很對你的胃口。</div>
-      <div class="row"><span class="chip"># ${esc(p.style)}</span>
+      <div class="row"><span></span>
         <a class="link" href="${esc(p.url)}" target="_blank" rel="noopener">查看商品 ↗</a></div>
     </div>`;
-  $("styleBars").innerHTML = a.styleRates.map(s =>
-    `<div class="bar"><span>${esc(s.style)}</span><div class="t"><i style="width:${s.pct}%"></i></div><span class="v">${s.pct}%</span></div>`).join("");
-  $("facts").innerHTML = `<div><span>心動件數</span><b>${a.likeCount}/${r.choices.length}</b></div>
-    <div><span>心動均價</span><b>${a.avgYesPrice ? "$"+(a.avgYesPrice>=10000? (a.avgYesPrice/10000).toFixed(1)+"萬" : a.avgYesPrice.toLocaleString()) : "—"}</b></div>
-    <div><span>平均思考</span><b>${a.avgSec} 秒</b></div>`;
-  const loves = r.choices.filter(c=>c.choice==="super");
-  $("lovesPanel").style.display = loves.length ? "" : "none";
-  $("loves").innerHTML = loves.map(c=>`<span class="chip">${esc(c.brand)}｜${esc(c.name)}</span>`).join("");
   $("codeText").value = b64e(r);
   $("codeBox").classList.remove("on");
 }
@@ -523,7 +501,7 @@ async function saveRun(final){
     // text/plain + no-cors avoids a CORS preflight; Apps Script still receives the body
     await fetch(SHEET_ENDPOINT, { method:"POST", mode:"no-cors",
       headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(run) });
-    if (final) { $("saveStatus").textContent = "✓ 結果已自動儲存"; $("saveStatus").classList.add("ok"); $("codeBox").classList.add("on"); $("codeBox").querySelector("p").textContent = "（備份用）也可以複製結果代碼傳給他 💌"; }
+    if (final) { $("saveStatus").textContent = "✓ 結果已自動儲存"; $("saveStatus").classList.add("ok"); }
   } catch (e) {
     if (final || run.completed) saveFailed();
   } finally {
